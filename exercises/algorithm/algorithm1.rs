@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -29,13 +28,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: PartialOrd> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: PartialOrd> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -69,14 +68,61 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
-	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+
+    fn remove_first(&mut self) -> T {
+        match self.start {
+            Some(node) => {
+                let node_ptr = node.as_ptr();
+                let node = unsafe { Box::from_raw(node_ptr) };
+                self.start = node.next;
+                self.length -= 1;
+                node.val
+            }
+            None => panic!("Cannot remove from an empty list"),
+        }	
+    }
+
+    fn append(&mut self, other: Self) {
+        if self.length == 0 {
+            self.start = other.start;
+            self.end = other.end;
+            self.length = other.length;	
+        } else {
+            match self.end {
+                Some(end_ptr) => unsafe {
+                    (*end_ptr.as_ptr()).next = other.start;
+                },
+                None => self.start = other.start,
+            }	
         }
+    }
+
+	pub fn merge(mut list_a: LinkedList<T>, mut list_b: LinkedList<T>) -> Self
+	{
+        if list_a.length == 0 {
+			return list_b;
+		}
+		if list_b.length == 0 {
+			return list_a;
+		}
+
+        let first_a = list_a.get(0).unwrap();
+        let first_b = list_b.get(0).unwrap();
+
+        let mut list_c = LinkedList::<T>::new();
+        if first_a < first_b {
+            let head = list_a.remove_first();
+            list_c.add(head);
+            let rest = Self::merge(list_a, list_b);
+            list_c.append(rest);
+        } else {
+            let head = list_b.remove_first();
+            list_c.add(head);
+            let rest = Self::merge(list_a, list_b);
+            list_c.append(rest);
+        }
+
+		list_c
 	}
 }
 

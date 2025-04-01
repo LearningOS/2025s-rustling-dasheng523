@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -36,8 +35,62 @@ where
         self.len() == 0
     }
 
+    fn heapify_up(&mut self, idx: usize) {
+        if idx == 1 {
+            return;
+        }
+        let mut idx = idx;
+        let current = &self.items[idx];
+        let parent_idx = self.parent_idx(idx);
+        let parent_num = &self.items[parent_idx];
+        let rs = (self.comparator)(current, parent_num);
+        if rs {
+            self.items.swap(idx, parent_idx);
+            self.heapify_up(parent_idx);
+        }
+    }
+
+    fn heapify_down(&mut self, idx: usize) {
+        println!("heapify_down: {}", idx);
+        let current = &self.items[idx];
+        if !self.children_present(idx) {
+            return;
+        }
+        let left_child_idx = self.left_child_idx(idx);
+        let right_child_idx = self.right_child_idx(idx);
+        println!("index: {} {} {}", left_child_idx, right_child_idx, idx);
+        let left_child_num = &self.items[left_child_idx];
+
+        if right_child_idx >= self.count {
+            let rs = (self.comparator)(left_child_num, current);
+            if rs {
+                self.items.swap(idx, left_child_idx);
+                self.heapify_down(left_child_idx);
+            }
+            return;
+        }
+
+        let right_child_num = &self.items[right_child_idx];
+        let rs = (self.comparator)(left_child_num, right_child_num);
+        if rs { 
+            let rs = (self.comparator)(left_child_num, current);
+            if rs {
+                self.items.swap(idx, left_child_idx);
+                self.heapify_down(left_child_idx);
+            }
+        } else { 
+            let rs = (self.comparator)(right_child_num, current);
+            if rs {
+                self.items.swap(idx, right_child_idx);
+                self.heapify_down(right_child_idx);
+            }
+        };
+    }
+
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        self.count += 1;
+        self.heapify_up(self.count);
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +110,7 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        1
     }
 }
 
@@ -84,8 +136,22 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        // 如果堆为空，返回 None
+        if self.count == 0 {
+            return None;
+        }
+
+        // 交换堆顶和堆尾元素
+        self.items.swap(1, self.count);
+
+        // 取出堆尾元素
+        let item = self.items.pop();
+        self.count -= 1;
+
+        // 堆化
+        self.heapify_down(1);
+
+        item
     }
 }
 
